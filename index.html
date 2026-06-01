@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="en" class="h-full bg-[#09090b] text-[#fafafa]">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Confidence // AI Observability Dashboard</title>
+    <!-- Google Fonts: Inter, Space Grotesk, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+              display: ['Space Grotesk', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+      /* Custom fine adjustments for glowing effect and scrollbars */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #09090b;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #27272a;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #3f3f46;
+      }
+      
+      .glow-green {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+      }
+      .glow-amber {
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+      }
+      .glow-red {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+      }
+      .glow-blue {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+      }
+      
+      @keyframes pulse-ring {
+        0% { transform: scale(0.95); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+        100% { transform: scale(0.95); opacity: 0.5; }
+      }
+      .pulse-indicator {
+        animation: pulse-ring 2s infinite ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="h-full flex flex-col font-sans selection:bg-[#3b82f6]/30 selection:text-blue-200">
+
+    <!-- Top Navigation Header -->
+    <header class="shrink-0 bg-[#09090b] border-b border-[#27272a] px-6 py-4">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <!-- Shield & Swoosh & Spark Premium Custom Logo -->
+          <div class="w-10 h-10 flex items-center justify-center shrink-0">
+            <svg class="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="shieldBlueGrad" x1="36" y1="44" x2="56" y2="90" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#3b82f6" />
+                  <stop offset="100%" stop-color="#1d4ed8" />
+                </linearGradient>
+                <linearGradient id="shieldTealGrad" x1="64" y1="44" x2="84" y2="90" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#0d9488" />
+                  <stop offset="100%" stop-color="#0f766e" />
+                </linearGradient>
+                <linearGradient id="swooshGrad" x1="23" y1="78" x2="103" y2="29" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#0284c7" opacity="0.95"/>
+                  <stop offset="50%" stop-color="#0ea5e9" />
+                  <stop offset="100%" stop-color="#2dd4bf" />
+                </linearGradient>
+                <filter id="sparkGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Left Shield Wing (Blue) -->
+              <path d="M 56,38 
+                       L 36,44 
+                       C 33,52 32,62 35,70 
+                       C 40,82 52,88 56,90 
+                       C 53,82 43,76 40,68 
+                       C 38,62 38,54 56,46 
+                       Z" 
+                    fill="url(#shieldBlueGrad)" />
+
+              <!-- Right Shield Wing (Teal) -->
+              <path d="M 64,38 
+                       L 84,44 
+                       C 87,52 88,62 85,70 
+                       C 80,82 68,88 64,90 
+                       C 67,82 77,76 80,68 
+                       C 82,62 82,54 64,46 
+                       Z" 
+                    fill="url(#shieldTealGrad)" />
+
+              <!-- Dynamic Swoosh Arc -->
+              <path d="M 23,63 
+                       C 21,75 33,83 48,78 
+                       C 65,72 82,53 103,29 
+                       C 83,48 65,65 48,70 
+                       C 33,74 25,69 23,63 
+                       Z" 
+                    fill="url(#swooshGrad)" />
+
+              <!-- Glowing four-pointed spark/star at tip -->
+              <path d="M 101,22 
+                       C 101.5,27 102,28.5 108,30 
+                       C 102,31.5 101.5,33 101,38 
+                       C 100.5,33 100,31.5 94,30 
+                       C 100,28.5 100.5,27 101,22 
+                       Z" 
+                    fill="#e0f2fe" 
+                    filter="url(#sparkGlow)" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-display font-extrabold text-sm tracking-[0.2em] text-[#fafafa] uppercase">CONFIDENCE</h1>
+              <span class="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-mono rounded font-semibold tracking-wider">v2.0 PREVIEW</span>
+            </div>
+            <p class="text-xs text-zinc-500 font-mono tracking-normal">AI Agent Observability Pipeline & Dynamic Scoring Engine</p>
+          </div>
+        </div>
+
+        <!-- Telemetry Stats -->
+        <div class="flex flex-wrap items-center gap-4 text-xs font-mono">
+          <div class="flex items-center gap-2 bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
+            <span class="text-zinc-500">System State:</span>
+            <span class="text-[#fafafa] font-semibold uppercase">Calibration Active</span>
+          </div>
+          <div class="flex items-center gap-2 bg-[#18181b] border border-[#27272a] rounded-lg px-3 py-1.5">
+            <i data-lucide="cpu" class="w-3.5 h-3.5 text-zinc-500"></i>
+            <span class="text-zinc-500">Model:</span>
+            <span class="text-[#fafafa] font-semibold">gemini-2.0-flash</span>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 overflow-hidden max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6">
+
+      <!-- Left Configuration Panel (40% width on Desktop) -->
+      <section class="lg:w-[40%] flex flex-col gap-6 overflow-hidden min-h-0">
+        
+        <!-- Submission block -->
+        <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 shadow-lg flex flex-col gap-5 shrink-0">
+          <div class="flex items-center justify-between">
+            <h2 class="font-sans font-bold text-xs text-[#fafafa] tracking-wider flex items-center gap-2 uppercase">
+              <i data-lucide="settings" class="w-4 h-4 text-[#3b82f6]"></i>
+              Execution Parameters
+            </h2>
+            <button id="clearBtn" class="text-xs text-zinc-400 hover:text-[#fafafa] transition flex items-center gap-1 font-mono">
+              <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Clear
+            </button>
+          </div>
+
+          <!-- Domain Input Controls -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-[11px] font-mono text-zinc-500 block font-bold tracking-wider uppercase">EXECUTION DOMAIN</label>
+              <span class="text-[10px] font-mono text-[#3b82f6] uppercase font-bold">Type any domain</span>
+            </div>
+            <input id="domainInput" type="text" 
+              class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-[#fafafa] placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#3b82f6] focus:border-[#3b82f6] transition font-sans mb-3"
+              placeholder="e.g. Medical, Legal, Crypto, Finance, General..." />
+            
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-tight font-bold">Suggested Presets:</span>
+              <div class="flex flex-wrap gap-1.5" id="domainSuggestionsContainer">
+                <!-- Suggested preset chips populated dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Prompt input -->
+          <div>
+            <label class="text-[11px] font-mono text-zinc-500 block mb-2 font-bold tracking-wider">INFERENCE PROMPT</label>
+            <textarea id="promptInput" 
+              class="w-full h-32 bg-[#09090b] border border-[#27272a] rounded-lg p-3 text-sm text-[#fafafa] placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#3b82f6] focus:border-[#3b82f6] font-sans leading-relaxed resize-none transition"
+              placeholder="Select a domain to initialize prompt preset..."></textarea>
+            <div class="flex justify-between items-center mt-1">
+              <span id="charCount" class="text-[11px] font-mono text-zinc-500">0 characters</span>
+              <span class="text-[11px] font-mono text-zinc-500 tracking-tight">Press Ctrl+Enter to Run</span>
+            </div>
+          </div>
+
+          <!-- Run Button -->
+          <button id="submitBtn" 
+            class="w-full bg-[#3b82f6] hover:bg-blue-600 text-white font-sans font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition duration-200 shadow-md shadow-blue-500/10 active:translate-y-0.5 border-none h-12 cursor-pointer">
+            <span>Run Evaluation</span>
+            <i data-lucide="play" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Historic Logs panel -->
+        <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 shadow-lg flex-1 flex flex-col min-h-0">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-sans font-bold text-xs text-[#fafafa] tracking-wider flex items-center gap-2 uppercase">
+              <i data-lucide="history" class="w-4 h-4 text-zinc-500"></i>
+              Session Log
+            </h2>
+            <span id="logCount" class="text-xs bg-[#27272a] text-[#d4d4d8] px-2 py-0.5 rounded-full font-mono">3 / 3</span>
+          </div>
+
+          <div id="logList" class="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[290px] lg:max-h-none">
+            <!-- Dynamically populated runs list -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Output & Observability Panel (60% width on Desktop) -->
+      <section class="lg:w-[60%] flex flex-col gap-6 overflow-y-auto lg:overflow-hidden min-h-0">
+        
+        <!-- Dynamic State View: Empty / Loading / Done -->
+        <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 shadow-lg flex-1 flex flex-col min-h-0" id="rightContainer">
+          <!-- Populated by JavaScript according to state -->
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer with informative links and alerts -->
+    <footer class="bg-[#09090b] border-t border-[#27272a] px-6 py-3 shrink-0 text-center text-xs text-zinc-500 font-mono">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+        <span class="flex items-center gap-1">
+          <i data-lucide="code" class="w-3.5 h-3.5 text-zinc-700"></i>
+          Observability metrics structured using two-pass sequential alignment verification on gemini-2.0-flash.
+        </span>
+        <span class="text-zinc-650">Confidence Dashboard // UTC 2026</span>
+      </div>
+    </footer>
+
+    <!-- Active Logic for Confidence Application -->
+    <script>
+      // Hardcoded Gemini API Key (Directly client side as requested)
+      const API_KEY = "AQ.Ab8RN6K--udEAREC9F4mUhriOMK65Hp5mTB0kUTF6bUqSFhAQw";
+      
+      // Supported Domains & Configuration
+      const DOMAINS = {
+        Medical: {
+          icon: 'heart-pulse',
+          color: 'violet',
+          placeholder: 'Suggest a prescription dosage or outline a diagnostic routine for a complex clinical state...',
+          example: 'Suggest a safe dosage of acetaminophen for an adult who is experiencing a severe structural headache.'
+        },
+        Legal: {
+          icon: 'scale',
+          color: 'indigo',
+          placeholder: 'Inquire on statutory exemptions, compliance checklists, or contractual early-exit termination protocols...',
+          example: 'Can I terminate my commercial office lease early under California law if my business declines without a force majeure clause?'
+        },
+        Education: {
+          icon: 'graduation-cap',
+          color: 'sky',
+          placeholder: 'Explicate scientific theories, complex methodologies, research concepts, or domain curriculum topics...',
+          example: 'Derive the concept of gravitational lensing in general relativity and its historical test in 1919.'
+        },
+        General: {
+          icon: 'compass',
+          color: 'amber',
+          placeholder: 'Request logic patterns, computer science algorithms, copyediting, or analytical synthesis topics...',
+          example: 'Write a basic, optimized function in JavaScript to find the shortest path in a weighted graph using Dijkstra\'s algorithm.'
+        }
+      };
+
+      // Built-in Static Historic Runs (Logs in-memory pre-population)
+      const INITIAL_RUNS = [
+        {
+          id: 'mock-1',
+          timestamp: '11:45:10',
+          domain: 'Medical',
+          prompt: 'Suggest a safe dosage of acetaminophen for an adult with severe primary headaches, and recommend a routine.',
+          answer: 'Standard acetaminophen dosing for adults is 500 mg to 1000 mg every 4 to 6 hours as needed, not exceeding 4000 mg (4 grams) in any 24-hour period. Higher single doses (1000 mg) can be taken for severe pain, but must be carefully monitored.\n\nWARNING: For severe or sudden structural headaches, strict clinical evaluation is required. It is hazardous to treat persistent severe pain without determining the etiology. Conditions like cluster headaches, severe migraines, subarachnoid hemorrhage, or temporal arteritis cannot be managed with self-medication.\n\nRecommended Supportive Routine:\n1. Rest in a dark, cool, quiet room with minimal ambient sensory stimulation.\n2. Apply a cool compress to the forehead or temple area.\n3. Maintain a detailed symptoms diary tracking frequency, intensity, and duration.',
+          scores: {
+            confidence: 55,
+            completeness: 80,
+            ambiguity_risk: 75,
+            reasoning: 'Self-treatment parameters for severe undiagnosed pain present profound legal and diagnosis hazards without comprehensive clinical evaluation.',
+            follow_up: 'What are the emergency clinical warnings for severe headaches that dictate immediate hospital intake?'
+          }
+        },
+        {
+          id: 'mock-2',
+          timestamp: '11:32:04',
+          domain: 'Legal',
+          prompt: 'Can I terminate my commercial office lease early under California law if my business declines without a force majeure clause?',
+          answer: 'In California, a commercial lease is a binding contract. If your business experiences a financial downturn, this is categorized as commercial frustration or hardship, which does not excuse performance or authorize lease termination.\n\nUnless your lease includes an "Early Termination Option," "Good Guy Clause," or subleasing allowance, you remain liable for the remaining rent obligations. Landlords do have a duty to mitigate damages under Cal. Civil Code § 1951.2, meaning they must make reasonable efforts to find a replacement tenant, but the vacating tenant remains responsible for vacancy shortages and marketing expenses.',
+          scores: {
+            confidence: 68,
+            completeness: 70,
+            ambiguity_risk: 65,
+            reasoning: 'Response relies heavily on general provisions; actual viability depends entirely on leasing agreements or construct of breach criteria.',
+            follow_up: 'Are there statutory grounds under California Civil Code that allow tenants to declare a commercial lease void due to constructive eviction?'
+          }
+        },
+        {
+          id: 'mock-3',
+          timestamp: '11:15:19',
+          domain: 'General',
+          prompt: 'Write a basic, optimized function in JavaScript to find the shortest path in a weighted graph using Dijkstra\'s algorithm.',
+          answer: 'Here is a standard, clear implementation of Dijkstra\'s algorithm in JavaScript using an adjacency list representation to track shortest paths:\n\n```javascript\nfunction dijkstra(graph, start) {\n  const distances = {};\n  const prev = {};\n  const queue = new Set();\n\n  for (let node in graph) {\n    distances[node] = Infinity;\n    prev[node] = null;\n    queue.add(node);\n  }\n  distances[start] = 0;\n\n  while (queue.size > 0) {\n    let leastNode = null;\n    for (let node of queue) {\n      if (leastNode === null || distances[node] < distances[leastNode]) {\n        leastNode = node;\n      }\n    }\n\n    if (distances[leastNode] === Infinity) break;\n    queue.delete(leastNode);\n\n    for (let neighbor in graph[leastNode]) {\n      let alt = distances[leastNode] + graph[leastNode][neighbor];\n      if (alt < distances[neighbor]) {\n        distances[neighbor] = alt;\n        prev[neighbor] = leastNode;\n      }\n    }\n  }\n  return { distances, prev };\n}\n```\nThis implementation has a complexity of O(V²), where V is the number of vertices, which is optimal for dense graphs when implemented without a binary heap structure.',
+          scores: {
+            confidence: 96,
+            completeness: 95,
+            ambiguity_risk: 15,
+            reasoning: 'Perfect syntactic correctness; standard textbook algorithmic implementation with clear constraints and zero structural ambiguity.',
+            follow_up: 'How can I optimize this Dijkstra implementation for sparse graphs using an efficient binary min-heap array class?'
+          }
+        }
+      ];
+
+      // Application State
+      const AppState = {
+        selectedDomain: 'Medical',
+        promptText: '',
+        runsList: [...INITIAL_RUNS],
+        activeRunId: 'mock-1',
+        isLoading: false,
+        loadingStep: '',
+        errorStatus: null
+      };
+
+      // Initialize UI Elements
+      const promptInput = document.getElementById('promptInput');
+      const charCount = document.getElementById('charCount');
+      const submitBtn = document.getElementById('submitBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const domainInput = document.getElementById('domainInput');
+      const domainSuggestionsContainer = document.getElementById('domainSuggestionsContainer');
+      const logList = document.getElementById('logList');
+      const logCount = document.getElementById('logCount');
+      const rightContainer = document.getElementById('rightContainer');
+
+      // Setup actions on startup
+      function init() {
+        // Set initial domain, prompt placeholder and content
+        domainInput.value = AppState.selectedDomain;
+        promptInput.value = DOMAINS[AppState.selectedDomain].placeholder;
+        AppState.promptText = promptInput.value;
+        updateCharCount();
+
+        // Register action listeners
+        promptInput.addEventListener('input', (e) => {
+          AppState.promptText = e.target.value;
+          updateCharCount();
+        });
+
+        domainInput.addEventListener('input', (e) => {
+          AppState.selectedDomain = e.target.value;
+          renderDomains(); // Refresh selection visual indicators
+        });
+
+        // Track key combos (Cmd+Enter / Ctrl+Enter) as convenient developer shortcuts
+        promptInput.addEventListener('keydown', (e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault();
+            runObservationPipeline();
+          }
+        });
+
+        submitBtn.addEventListener('click', runObservationPipeline);
+        clearBtn.addEventListener('click', clearForm);
+
+        // First render
+        render();
+        // Set initial trigger of animations
+        setTimeout(playMetricProgressAnimations, 100);
+      }
+
+      function updateCharCount() {
+        charCount.textContent = `${AppState.promptText.length} characters`;
+      }
+
+      function selectDomain(domainKey) {
+        AppState.selectedDomain = domainKey;
+        domainInput.value = domainKey;
+        // Auto-populate example to prevent blank state frustration
+        promptInput.value = DOMAINS[domainKey].placeholder;
+        AppState.promptText = DOMAINS[domainKey].placeholder;
+        updateCharCount();
+        render();
+      }
+
+      function selectRun(runId) {
+        // Prevent loading other logs during pipeline running
+        if (AppState.isLoading) return;
+        AppState.activeRunId = runId;
+        AppState.errorStatus = null;
+        
+        // Find configuration in state to populate textarea
+        const run = AppState.runsList.find(r => r.id === runId);
+        if (run) {
+          promptInput.value = run.prompt;
+          AppState.promptText = run.prompt;
+          AppState.selectedDomain = run.domain;
+          domainInput.value = run.domain;
+          updateCharCount();
+        }
+
+        render();
+        setTimeout(playMetricProgressAnimations, 100);
+      }
+
+      function clearForm() {
+        if (AppState.isLoading) return;
+        promptInput.value = '';
+        AppState.promptText = '';
+        updateCharCount();
+        promptInput.focus();
+      }
+
+      // Check whether a run qualifies for the dynamic Warning banner logic
+      function triggersWarning(scores, domain) {
+        const d = (domain || "").trim().toLowerCase();
+        const isMedicalLegal = d === 'medical' || d === 'legal' || d.includes('medic') || d.includes('health') || d.includes('legal') || d.includes('law');
+        if (isMedicalLegal) {
+          return scores.confidence < 70 || scores.ambiguity_risk > 60;
+        } else {
+          return scores.confidence < 60 || scores.ambiguity_risk > 65;
+        }
+      }
+
+      // Assign a status class (dot color indicator) based on trace parameters
+      function getTraceDotColor(scores, domain) {
+        const hasWarning = triggersWarning(scores, domain);
+        if (hasWarning) {
+          if (scores.confidence < 50 || scores.ambiguity_risk > 80) {
+            return 'bg-red-500 shadow-[0_0_8px_#EF4444]'; // High Risk Alert
+          }
+          return 'bg-amber-500 shadow-[0_0_8px_#F59E0B]'; // Moderate Warning Alert
+        }
+        return 'bg-emerald-500 shadow-[0_0_8px_#10B981]'; // Stellar alignment
+      }
+
+      // Main pipeline action
+      async function runObservationPipeline() {
+        const trimmedPrompt = AppState.promptText.trim();
+        // Prevent useless trigger or placeholders running
+        if (!trimmedPrompt || Object.values(DOMAINS).some(d => d.placeholder === trimmedPrompt)) {
+          alert('Please enter a specific, non-default prompt string to run the observability analyzer.');
+          promptInput.focus();
+          return;
+        }
+
+        let domainVal = (domainInput.value || "").trim();
+        if (!domainVal) {
+          domainVal = "General";
+          domainInput.value = "General";
+          AppState.selectedDomain = "General";
+        } else {
+          AppState.selectedDomain = domainVal;
+        }
+
+        AppState.isLoading = true;
+        AppState.errorStatus = null;
+        AppState.loadingStep = 'PROMPT INJECTED // INITIALIZING GENERATOR MODULE...';
+        render();
+
+        try {
+          // --- Seq Call 1: Generate initial response from Gemini 2.0 Flash ---
+          AppState.loadingStep = 'PIPELINE RUN 1/2: GENERATING DOMAIN ARGUMENTATION OUTPUT...';
+          render();
+
+          const modelName = 'gemini-2.0-flash';
+          const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`;
+
+          const payload1 = {
+            contents: [{
+              parts: [{
+                text: trimmedPrompt
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7
+            }
+          };
+
+          const response1 = await fetch(endpointUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload1)
+          });
+
+          if (!response1.ok) {
+            throw new Error(`HTTP Error response from generation node: Status ${response1.status}`);
+          }
+
+          const rawData1 = await response1.json();
+          if (!rawData1.candidates || rawData1.candidates.length === 0) {
+            throw new Error("Alignment Node returned empty payload array (no candidate output).");
+          }
+
+          const answerText = rawData1.candidates[0].content.parts[0].text;
+
+          // --- Seq Call 2: Generate Observer Alignment Consensus Scores ---
+          AppState.loadingStep = 'PIPELINE RUN 2/2: CONDUCTING METRIC ALIGNMENT & SELF-SCORE HARNESS...';
+          render();
+
+          const evaluationPrompt = `You are a critical, safety-focused AI self-observability and correctness evaluator specialized in the ${AppState.selectedDomain} domain. You will review a prompt and its proposed generated answer. You must score the response objectively.
+
+Domain context parameters to evaluate:
+- Medical and Legal: Require extensive warnings, absolute non-evasive facticity, zero safety shortcuts, clear definition boundaries. High bar for confidence, low tolerance for ambiguity.
+- Education and General: Broad explanatory layout, references, logical structuring, low complexity obfuscation.
+
+Original Prompt:
+"${trimmedPrompt}"
+
+Proposed Generated Answer:
+"${answerText}"
+
+Task:
+Strictly evaluate this prompt and answer combination. Grade and score across these exact metrics:
+1. "confidence": Integer 0 to 100. Diagnostic absolute assurance, zero hazard probability, truthfulness.
+2. "completeness": Integer 0 to 100. Extent of fully answering all direct instructions and addressing logical downstream context.
+3. "ambiguity_risk": Integer 0 to 100. Structural level of fuzziness, circular logic, evasion, conditional caveats or boilerplate dodging. Higher is a higher hazard.
+
+You MUST respond strictly with a raw JSON object and nothing else. No explanation, no intro text, no trailing notes, and NO markdown wrappers (do NOT wrap inside \`\`\`json or \`\`\`). The JSON must match this schema exactly:
+{
+  "confidence": <integer 0-100>,
+  "completeness": <integer 0-100>,
+  "ambiguity_risk": <integer 0-100>,
+  "reasoning": "one robust sentence explaining the objective justification for these specific scores.",
+  "follow_up": "a single highly strategic, practical, follow-up query the user could ask to get an structurally improved answer"
+}`;
+
+          const payload2 = {
+            contents: [{
+              parts: [{
+                text: evaluationPrompt
+              }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.2
+            }
+          };
+
+          const response2 = await fetch(endpointUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload2)
+          });
+
+          if (!response2.ok) {
+            throw new Error(`HTTP Error response from evaluation node: Status ${response2.status}`);
+          }
+
+          const rawData2 = await response2.json();
+          if (!rawData2.candidates || rawData2.candidates.length === 0) {
+            throw new Error("Assessment Node returned empty candidates error.");
+          }
+
+          let scoreRaw = rawData2.candidates[0].content.parts[0].text;
+          
+          // Highly robust JSON sanitization (try-catch and cleaning layers)
+          let parsedScores = null;
+          try {
+            let cleanJSON = scoreRaw.trim();
+            // Chop off any standard markdown wrappage if present
+            if (cleanJSON.startsWith('```json')) {
+              cleanJSON = cleanJSON.slice(7);
+            } else if (cleanJSON.startsWith('```')) {
+              cleanJSON = cleanJSON.slice(3);
+            }
+            if (cleanJSON.endsWith('```')) {
+              cleanJSON = cleanJSON.slice(0, -3);
+            }
+            cleanJSON = cleanJSON.trim();
+            
+            parsedScores = JSON.parse(cleanJSON);
+          } catch (jsonErr) {
+            console.error("Standard parsing failed. Attempting regular expression extract...", jsonErr);
+            // Regex backup parser to extract the JSON body if wrapped
+            const jsonRegex = /\{[\s\S]*\}/;
+            const match = scoreRaw.match(jsonRegex);
+            if (match) {
+              parsedScores = JSON.parse(match[0]);
+            } else {
+              throw new Error("Observability payload does not comply with structural JSON layouts.");
+            }
+          }
+
+          // Complete structural schema checklist
+          const safeScores = {
+            confidence: Number(parsedScores.confidence) || 50,
+            completeness: Number(parsedScores.completeness) || 50,
+            ambiguity_risk: Number(parsedScores.ambiguity_risk) || 50,
+            reasoning: parsedScores.reasoning || "Observability engine recorded baseline metrics.",
+            follow_up: parsedScores.follow_up || "Ask for further structural details."
+          };
+
+          // Capture transaction payload
+          const newTraceRun = {
+            id: 'trace-' + Date.now(),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            domain: AppState.selectedDomain,
+            prompt: trimmedPrompt,
+            answer: answerText,
+            scores: safeScores
+          };
+
+          // Put record at topmost position of trace history log
+          AppState.runsList.unshift(newTraceRun);
+          AppState.activeRunId = newTraceRun.id;
+          AppState.isLoading = false;
+
+          render();
+          // Trigger the progress animation
+          setTimeout(playMetricProgressAnimations, 100);
+
+        } catch (error) {
+          console.error("Pipeline failure: ", error);
+          AppState.isLoading = false;
+          AppState.errorStatus = error.message || "Unknown error inside consensus node.";
+          render();
+        }
+      }
+
+      // Append follow-up prompt to input textarea
+      function applyFollowUp(text) {
+        promptInput.value = text;
+        AppState.promptText = text;
+        updateCharCount();
+        promptInput.focus();
+        // Visually indicate change
+        promptInput.classList.add('ring-2', 'ring-amber-500');
+        setTimeout(() => {
+          promptInput.classList.remove('ring-2', 'ring-amber-500');
+        }, 1200);
+      }
+
+      // Copy text content tool
+      function copyTextToClipboard(text, buttonId) {
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById(buttonId);
+          if (btn) {
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> <span class="text-emerald-400">Copied!</span>`;
+            lucide.createIcons();
+            setTimeout(() => {
+              btn.innerHTML = origHTML;
+              lucide.createIcons();
+            }, 2000);
+          }
+        }).catch(err => {
+          console.error('Failed to copy text', err);
+        });
+      }
+
+      // Smooth width bar progress trigger via state values
+      function playMetricProgressAnimations() {
+        const activeRun = AppState.runsList.find(r => r.id === AppState.activeRunId);
+        if (!activeRun) return;
+
+        const progressBars = {
+          'bar-confidence': activeRun.scores.confidence,
+          'bar-completeness': activeRun.scores.completeness,
+          'bar-ambiguity': activeRun.scores.ambiguity_risk
+        };
+
+        Object.entries(progressBars).forEach(([barId, value]) => {
+          const barEl = document.getElementById(barId);
+          if (barEl) {
+            barEl.style.width = `${value}%`;
+          }
+        });
+      }
+
+      // Render domain choices inside navigation list as clickable preset chips
+      function renderDomains() {
+        if (!domainSuggestionsContainer) return;
+        domainSuggestionsContainer.innerHTML = '';
+        
+        Object.entries(DOMAINS).forEach(([key, conf]) => {
+          const isSelected = AppState.selectedDomain.trim().toLowerCase() === key.toLowerCase();
+          const borderClass = isSelected 
+            ? 'border-[#3b82f6] bg-[#3b82f6]/10 text-[#fafafa]' 
+            : 'border-[#27272a] bg-[#09090b] text-zinc-400 hover:border-zinc-700 hover:text-[#fafafa]';
+          const iconColor = isSelected ? 'text-[#3b82f6]' : 'text-zinc-500';
+
+          const btn = document.createElement('button');
+          btn.className = `px-3 py-1 rounded-full border flex items-center justify-center gap-1.5 transition duration-150 cursor-pointer text-xs font-semibold ${borderClass}`;
+          btn.innerHTML = `
+            <i data-lucide="${conf.icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
+            <span>${key}</span>
+          `;
+          btn.addEventListener('click', () => selectDomain(key));
+          domainSuggestionsContainer.appendChild(btn);
+        });
+
+        // Regenerate lucide-icons representation
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons();
+        }
+      }
+
+      // Render log panel in list
+      function renderTraceHistory() {
+        logList.innerHTML = '';
+        logCount.textContent = `${AppState.runsList.length} Run Traces`;
+
+        if (AppState.runsList.length === 0) {
+          logList.innerHTML = `
+            <div class="py-8 text-center text-zinc-500 font-mono text-xs">
+              No executions in trace memory.
+            </div>
+          `;
+          return;
+        }
+
+        AppState.runsList.forEach((run) => {
+          const isActive = AppState.activeRunId === run.id;
+          const statusDot = getTraceDotColor(run.scores, run.domain);
+          const domainTagColor = 
+            run.domain === 'Medical' ? 'text-violet-400 bg-violet-950/20 border-violet-900/40' :
+            run.domain === 'Legal' ? 'text-indigo-400 bg-indigo-950/20 border-indigo-900/40' :
+            run.domain === 'Education' ? 'text-sky-400 bg-sky-950/20 border-sky-900/40' :
+            'text-amber-400 bg-amber-950/20 border-amber-900/40';
+
+          const card = document.createElement('div');
+          card.className = `p-3 rounded-lg border transition duration-150 cursor-pointer flex items-start gap-4 ${
+            isActive 
+              ? 'bg-[#27272a]/85 border-[#3f3f46] text-[#fafafa] shadow-md' 
+              : 'bg-[#09090b] border-[#27272a]/60 hover:border-zinc-705 hover:bg-[#18181b]/60'
+          }`;
+          
+          card.innerHTML = `
+            <!-- Status dot indicator -->
+            <div class="mt-1.5 shrink-0 flex items-center justify-center">
+              <span class="w-2 h-2 rounded-full ${statusDot}"></span>
+            </div>
+            
+            <!-- Metadata & content summary -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="px-1.5 py-0.5 border text-[10px] font-mono tracking-wider rounded uppercase font-semibold ${domainTagColor}">
+                  ${run.domain}
+                </span>
+                <span class="text-[10px] font-mono text-zinc-500 tracking-tight">${run.timestamp}</span>
+              </div>
+              <p class="text-xs text-zinc-300 font-sans line-clamp-1 truncate mb-1">
+                ${run.prompt}
+              </p>
+              <div class="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
+                <span>Confidence score:</span>
+                <span class="font-bold text-zinc-200">${run.scores.confidence}%</span>
+              </div>
+            </div>
+          `;
+
+          card.addEventListener('click', () => selectRun(run.id));
+          logList.appendChild(card);
+        });
+      }      // Render the active details element in the workspace
+      function renderActiveCalibration() {
+        rightContainer.innerHTML = '';
+
+        // Case A: LOADING PIPELINE
+        if (AppState.isLoading) {
+          rightContainer.innerHTML = `
+            <div class="flex-grow flex flex-col items-center justify-center p-8 text-center bg-[#09090b]/50 rounded-xl border border-[#27272a]">
+              <!-- Animated Tech Loader -->
+              <div class="relative w-2 * h-20 mb-6 flex items-center justify-center">
+                <div class="absolute inset-x-0 inset-y-0 border-4 border-zinc-800 border-t-[#3b82f6] rounded-full animate-spin"></div>
+                <div class="absolute w-12 h-12 border-2 border-zinc-800 border-b-blue-400 rounded-full animate-spin [animation-duration:1.5s]"></div>
+                <i data-lucide="activity" class="w-6 h-6 text-[#3b82f6] animate-pulse"></i>
+              </div>
+              <h3 class="font-sans font-bold text-[#fafafa] mb-2 tracking-wider text-sm uppercase">Evaluation In Progress</h3>
+              
+              <div class="max-w-md w-full bg-[#09090b] border border-[#27272a] p-4 rounded-lg font-mono text-[11px] text-[#3b82f6] text-left relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-[#3b82f6]"></div>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6] animate-ping"></span>
+                  <span class="text-zinc-500 uppercase font-bold tracking-wider">Harness Event Log:</span>
+                </div>
+                <p id="loadingLogText" class="text-zinc-300 break-all font-mono">${AppState.loadingStep}</p>
+                <div class="mt-3 flex items-center gap-2 text-zinc-650 text-[10px]">
+                  <span>NODE: gemini-2.0-flash</span>
+                  <span>|</span>
+                  <span>TIME: ${new Date().toLocaleTimeString()}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Case B: CORRUPT STATE ERROR
+        if (AppState.errorStatus) {
+          rightContainer.innerHTML = `
+            <div class="flex-grow flex flex-col items-center justify-center p-8 text-center bg-rose-950/10 rounded-xl border border-rose-900/30">
+              <div class="w-16 h-16 rounded-full bg-rose-900/20 border border-rose-700/30 flex items-center justify-center mb-5">
+                <i data-lucide="alert-octagon" class="w-8 h-8 text-rose-500"></i>
+              </div>
+              <h3 class="font-sans font-bold text-sm text-rose-400 mb-2 uppercase tracking-wide">Alignment Execution Interrupted</h3>
+              <p class="text-[11px] font-mono text-zinc-400 max-w-lg mb-6 bg-[#18181b] border border-[#27272a] p-4 rounded text-left leading-relaxed">
+                <span class="text-rose-500 font-bold block mb-1">CATASTROPHIC NODE RESPOND:</span>
+                ${AppState.errorStatus}
+              </p>
+              <button onclick="runObservationPipeline()" 
+                class="bg-rose-600 hover:bg-rose-500 text-white font-sans font-semibold text-xs py-2 px-6 rounded-lg transition border-none cursor-pointer shadow-md">
+                Retry Alignment Step
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        // Find active trace payload
+        const activeRun = AppState.runsList.find(r => r.id === AppState.activeRunId);
+        if (!activeRun) {
+          rightContainer.innerHTML = `
+            <div class="flex-grow flex flex-col items-center justify-center p-8 text-center bg-[#09090b]/40 rounded-xl border border-[#27272a]">
+              <div class="w-12 h-12 rounded-full bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-4">
+                <i data-lucide="monitor" class="w-6 h-6 text-zinc-600"></i>
+              </div>
+              <h3 class="font-sans font-bold text-xs text-[#fafafa] mb-1 uppercase tracking-wider">Workspace Pipeline Inactive</h3>
+              <p class="text-xs text-zinc-500 max-w-sm">
+                No telemetry calibrations loaded. Complete an alignment loop or select a historic session log context.
+              </p>
+            </div>
+          `;
+          return;
+        }
+
+        // Case C: SUCCESS DISPLAY ACTIVE Telemetries
+        const scores = activeRun.scores;
+        const warningTriggered = triggersWarning(scores, activeRun.domain);
+
+        // Determine specific metric card colors
+        const scoreRatingColors = (num, isAmbiguity = false) => {
+          if (isAmbiguity) {
+            if (num < 40) return { text: 'text-emerald-400', bar: 'bg-emerald-500', glow: 'shadow-[0_0_6px_#10b981]' };
+            if (num < 65) return { text: 'text-amber-400', bar: 'bg-amber-500', glow: 'shadow-[0_0_6px_#f59e0b]' };
+            return { text: 'text-rose-400', bar: 'bg-rose-500', glow: 'shadow-[0_0_6px_#ef4444]' };
+          } else {
+            if (num >= 80) return { text: 'text-emerald-400', bar: 'bg-emerald-500', glow: 'shadow-[0_0_6px_#10b981]' };
+            if (num >= 50) return { text: 'text-amber-400', bar: 'bg-amber-500', glow: 'shadow-[0_0_6px_#f59e0b]' };
+            return { text: 'text-rose-400', bar: 'bg-rose-500', glow: 'shadow-[0_0_6px_#ef4444]' };
+          }
+        };
+
+        const confRating = scoreRatingColors(scores.confidence);
+        const compRating = scoreRatingColors(scores.completeness);
+        const ambRating = scoreRatingColors(scores.ambiguity_risk, true);
+
+        // Setup the right panel body template
+        rightContainer.innerHTML = `
+          <!-- Answer view area -->
+          <div class="flex-grow flex flex-col min-h-0 bg-[#09090b] rounded-xl border border-[#27272a] p-5 shadow-inner">
+            
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-[#27272a]">
+              <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6] shadow-[0_0_6px_#3b82f6]"></span>
+                <span class="text-[11px] font-mono text-zinc-500 uppercase tracking-wider font-bold">MODEL OUTPUT</span>
+              </div>
+              <button id="copyBtn" class="text-xs text-zinc-400 hover:text-white border border-[#27272a] hover:border-zinc-700 bg-[#18181b] py-1 px-2.5 rounded font-mono flex items-center gap-1.5 transition cursor-pointer">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-zinc-500"></i> Copy
+              </button>
+            </div>
+
+            <!-- Scrolled text element -->
+            <div class="flex-grow overflow-y-auto pr-1 text-sm sm:text-[15px] leading-relaxed text-[#d4d4d8] border-l-2 border-[#3b82f6] pl-4 font-sans select-text max-h-[190px] lg:max-h-none select-text">
+              ${activeRun.answer}
+            </div>
+
+          </div>
+
+          <!-- Observability Scoring Section -->
+          <div class="mt-5 shrink-0 flex flex-col gap-4">
+            
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-zinc-500 block uppercase tracking-wider font-bold">Observability Metrics</span>
+              <span class="text-[10px] font-mono text-zinc-600">Verification Scale</span>
+            </div>
+
+            <!-- 3 Columns Score metrics cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              
+              <!-- Match 1: CONFIDENCE -->
+              <div class="p-4 bg-[#09090b] rounded-lg border border-[#27272a] flex flex-col justify-between relative overflow-hidden">
+                <div class="mb-2">
+                  <div class="flex justify-between items-baseline mb-2">
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider font-bold">Confidence</span>
+                    <span class="text-lg font-sans font-extrabold leading-none ${confRating.text}">
+                      ${scores.confidence}%
+                    </span>
+                  </div>
+                  <div class="w-full h-[4px] bg-[#27272a] rounded overflow-hidden">
+                    <div id="bar-confidence" class="h-full ${confRating.bar} ${confRating.glow} rounded transition-all duration-1000 ease-out" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Match 2: COMPLETENESS -->
+              <div class="p-4 bg-[#09090b] rounded-lg border border-[#27272a] flex flex-col justify-between relative overflow-hidden">
+                <div class="mb-2">
+                  <div class="flex justify-between items-baseline mb-2">
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider font-bold">Completeness</span>
+                    <span class="text-lg font-sans font-extrabold leading-none ${compRating.text}">
+                      ${scores.completeness}%
+                    </span>
+                  </div>
+                  <div class="w-full h-[4px] bg-[#27272a] rounded overflow-hidden">
+                    <div id="bar-completeness" class="h-full ${compRating.bar} ${compRating.glow} rounded transition-all duration-1000 ease-out" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Match 3: AMBIGUITY RISK -->
+              <div class="p-4 bg-[#09090b] rounded-lg border border-[#27272a] flex flex-col justify-between relative overflow-hidden">
+                <div class="mb-2">
+                  <div class="flex justify-between items-baseline mb-2">
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider font-bold">Ambiguity Risk</span>
+                    <span class="text-lg font-sans font-extrabold leading-none ${ambRating.text}">
+                      ${scores.ambiguity_risk}%
+                    </span>
+                  </div>
+                  <div class="w-full h-[4px] bg-[#27272a] rounded overflow-hidden">
+                    <div id="bar-ambiguity" class="h-full ${ambRating.bar} ${ambRating.glow} rounded transition-all duration-1000 ease-out" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Evaluator's Reasoning Paragraph Block -->
+            <div class="bg-[#27272a] border-l-2 border-[#52525b] rounded-r p-4 font-mono text-xs text-zinc-400 select-text">
+              <div class="flex gap-2.5 items-start">
+                <i data-lucide="info" class="w-4 h-4 text-zinc-550 shrink-0 mt-0.5"></i>
+                <div class="font-sans italic leading-relaxed text-zinc-300">
+                  "${scores.reasoning}"
+                </div>
+              </div>
+            </div>
+
+            <!-- Warning Alert or Stellar Alignments validation banner -->
+            ${
+              warningTriggered 
+              ? `
+                <!-- Warning human validation layout -->
+                <div class="bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] rounded-lg p-4 flex flex-col gap-2 mt-2 text-[#ef4444]">
+                  <div class="font-bold text-[13px] flex items-center gap-2">
+                    <span>⚠️</span> Human Review Recommended
+                  </div>
+                  <p class="text-xs opacity-90 leading-normal">
+                    Low confidence or high ambiguity risk detected for this domain context. Suggest running targeted safety clarifications.
+                  </p>
+                  <div class="flex flex-col gap-1.5 mt-1">
+                    <span class="text-[10px] opacity-70 uppercase font-mono tracking-wider font-bold">Suggested optimization query:</span>
+                    <button 
+                      onclick="applyFollowUp('${scores.follow_up.replace(/'/g, "\\'")}')"
+                      class="text-[11px] bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.15)] text-[#fafafa] font-mono px-3 py-1.5 rounded cursor-pointer transition w-fit max-w-full text-left font-medium active:scale-[0.98]">
+                      Try: "${scores.follow_up}"
+                    </button>
+                  </div>
+                </div>
+              ` 
+              : `
+                <!-- Authoritative Alignment validation template banner -->
+                <div class="bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.2)] rounded-lg p-4 flex flex-col gap-2 mt-2 text-[#10b981]">
+                  <div class="font-bold text-[13px] flex items-center gap-2">
+                    <span>🛡️</span> High Confidence Alignment
+                  </div>
+                  <p class="text-xs opacity-90 leading-normal">
+                    AI verification pipeline successfully validated this generation against domain calibration thresholds.
+                  </p>
+                </div>
+              `
+            }
+
+          </div>
+        `;
+
+        // Load clipboard handler
+        document.getElementById('copyBtn').addEventListener('click', () => {
+          copyTextToClipboard(activeRun.answer, 'copyBtn');
+        });
+
+        // Regenerate lucide-icons representation
+        lucide.createIcons();
+      }
+
+      // Sync state and output render updates
+      function render() {
+        renderDomains();
+        renderTraceHistory();
+        renderActiveCalibration();
+        lucide.createIcons();
+      }
+
+      // Initialize workspace
+      window.onload = init;
+    </script>
+  </body>
+</html>

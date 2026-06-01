@@ -1,0 +1,6 @@
+{
+  "name": "Confidence",
+  "description": "An AI agent observability tool that scores its own outputs so humans know when to trust them.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
